@@ -1,0 +1,12 @@
+Proposed Tech Stack
+Layer	Technology
+Frontend / Input UI	React (or Streamlit for a faster MVP)
+Backend / API	FastAPI (Python)
+Orchestration	LangChain / LangGraph (for multi-agent orchestration)
+LLM-as-Judge	OpenAI GPT-4 / Claude API (configurable)
+Embeddings	sentence-transformers (e.g., all-MiniLM-L6-v2) or OpenAI embeddings
+Vector Store	ChromaDB / FAISS (local) or Pinecone (managed)
+Database (submissions & results)	PostgreSQL / MongoDB
+Benchmark Datasets	TruthfulQA, SQuAD (via Hugging Face datasets library)
+Evaluation Reference Frameworks	RAGAS, TruLens (for methodology + possible metric reuse)
+Deployment	Docker, GitHub Actions (CI)
