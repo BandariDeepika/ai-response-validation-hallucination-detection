@@ -1,0 +1,8 @@
+Agent Responsibilities
+Agent	Responsibility	Scoring Scale
+Evaluation Orchestrator	Coordinates the pipeline: receives input, triggers retrieval, dispatches to judge agents, collects results, invokes verdict module	—
+Relevance Judge Agent	Checks whether the AI response actually addresses the question asked	1–5
+Accuracy Judge Agent	Checks factual correctness of the response against reference answer/retrieved evidence	1–5
+Hallucination Detection Agent	Flags claims in the response not supported by the retrieved context/reference (faithfulness check)	1–5 (or hallucination % )
+Completeness Judge Agent	Checks whether the response covers all necessary parts of the question	1–5
+Verdict Agent	Aggregates the four scores (weighted or averaged) into a final pass/fail + confidence verdict	Composite
