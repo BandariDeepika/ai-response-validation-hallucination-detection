@@ -1,0 +1,89 @@
+                ┌────────────────────────────┐
+                │   Evaluation Input / UI     │
+                │ (question, AI response,     │
+                │  optional reference/source)  │
+                └──────────────┬──────────────┘
+                               │
+                               ▼
+                ┌────────────────────────────┐
+                │   Backend / API Layer        │
+                └──────────────┬──────────────┘
+                               │
+              ┌────────────────┼─────────────────┐
+              ▼                                   ▼
+┌───────────────────────────┐      ┌───────────────────────────────┐
+│ Evaluation Submission &     │      │ Reference Knowledge Base        │
+│ Input Storage / Processing  │      │  - Benchmark Dataset Ingestion  │
+│  - Input validation          │      │    (TruthfulQA, SQuAD - HF)     │
+│  - Evaluation Submission DB  │      │  - Data Cleaning & Chunking     │
+└───────────────┬───────────┘      │  - Embedding Generation         │
+                │                    │  - Vector DB / Semantic Search  │
+                │                    └───────────────┬─────────────────┘
+                │                                    │
+                │                    ┌───────────────▼─────────────────┐
+                │                    │  RAG Retrieval Pipeline           │
+                │                    │  (fetch relevant reference/       │
+                │                    │   source evidence per question)   │
+                │                    └───────────────┬─────────────────┘
+                │                                    │
+                └────────────────┬───────────────────┘
+                                 ▼
+                ┌─────────────────────────────────────┐
+                │      AI Evaluation Agent Layer          │
+                │            (Agent Orchestrator)         │
+                │  ┌───────────┐ ┌───────────┐ ┌────────┐ │
+                │  │ Relevance │ │ Accuracy  │ │Halluci-│ │
+                │  │  Judge    │ │  Judge    │ │ nation │ │
+                │  │  Agent    │ │  Agent    │ │ Detect.│ │
+                │  └───────────┘ └───────────┘ └────────┘ │
+                │        ┌────────────────┐               │
+                │        │ Completeness   │               │
+                │        │ Judge Agent    │               │
+                │        └────────────────┘               │
+                │   (each agent calls an LLM-as-Judge)     │
+                └───────────────────┬───────────────────┘
+                                    ▼
+                ┌─────────────────────────────────────┐
+                │  Evaluation Scoring & Verdict Module   │
+                │  (aggregates per-dimension scores,     │
+                │   produces final verdict)              │
+                └───────────────────┬───────────────────┘
+                                    ▼
+                ┌─────────────────────────────────────┐
+                │   Structured Evaluation Results Module │
+                └───────────────────┬───────────────────┘
+                                    ▼
+                ┌─────────────────────────────────────┐
+                │  Results & Evaluation Dashboard UI     │
+                │  (+ Batch Evaluation, Report Gen,      │
+                │     Knowledge Base Update Module)      │
+                └─────────────────────────────────────┘
+
+
+1. Evaluation Input / UI
+This is the entry point — a simple form or interface where someone submits a question, the AI's response to that question, and optionally a reference answer or source document. Think of it as: "Here's what was asked, here's what the AI said — now check if it's good."
+2. Backend / API Layer
+Receives that submission, validates it (makes sure question/response aren't empty or malformed), and passes it into the system. This is your FastAPI service.
+3. Evaluation Submission & Input Storage
+The validated submission gets saved to a database (or in Milestone 1, a simple file) so it's not lost and can be tracked/retrieved later — each submission gets a unique ID and a status (received → processing → evaluated).
+4. Reference Knowledge Base (built ahead of time, runs in parallel)
+This is where "ground truth" data lives, so the system has something to check the AI's answer against:
+Benchmark Dataset Ingestion — downloads TruthfulQA and SQuAD datasets (public Q&A datasets used to test/benchmark AI systems)
+Data Cleaning & Chunking — breaks long reference texts into smaller pieces (chunks) so they're easier to search
+Embedding Generation — converts each text chunk into a numeric vector (a way for the computer to understand meaning, not just words)
+Vector DB / Semantic Search — stores these vectors so the system can quickly find chunks that are meaningfully similar to a new question, not just keyword-matching
+5. RAG Retrieval Pipeline
+When a new question comes in, this searches the Vector DB and pulls out the most relevant reference chunks — the "evidence" the judge agents will use to check the AI's answer. RAG = Retrieval-Augmented Generation, meaning the system retrieves real evidence instead of relying purely on the AI's own knowledge.
+6. AI Evaluation Agent Layer (the core of the system)
+The Agent Orchestrator sends the question, AI response, and retrieved evidence to four specialized "judge" agents, each checking one thing:
+Relevance Judge — Did the AI actually answer the question asked, or go off-topic?
+Accuracy Judge — Is the answer factually correct compared to the evidence?
+Hallucination Detection Agent — Did the AI make up facts not supported by any evidence? (This is the core "hallucination detection" part of your project title.)
+Completeness Judge — Did the AI cover everything the question required, or leave parts out?
+Each of these agents is itself powered by an LLM acting as a "judge" — this is called the LLM-as-a-Judge approach.
+7. Evaluation Scoring & Verdict Module
+Takes the four separate scores and combines them into one final verdict — e.g., "Pass" or "Fail," or an overall score with a breakdown by dimension.
+8. Structured Evaluation Results Module
+Formats the final verdict + all four scores + reasoning into a clean, structured record (like JSON) so it can be stored and displayed.
+9. Results & Evaluation Dashboard
+The final results are shown to the user — with support for evaluating many responses at once (Batch Evaluation), generating summary reports (Report Generation), and refreshing the reference data over time (Knowledge Base Update Module).
